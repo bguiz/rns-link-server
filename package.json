@@ -1,0 +1,30 @@
+{
+  "name": "rns-link-server",
+  "version": "0.0.0",
+  "description": "Server to handle example.rsk.link that looks up the appropriate RNS domain",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node-dev run.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bguiz/rns-link-server.git"
+  },
+  "keywords": [
+    "rns"
+  ],
+  "author": "bguiz",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/bguiz/rns-link-server/issues"
+  },
+  "homepage": "https://github.com/bguiz/rns-link-server#readme",
+  "dependencies": {
+    "express": "4.17.1",
+    "vhost": "3.0.2"
+  },
+  "devDependencies": {
+    "node-dev": "6.2.0"
+  }
+}
