@@ -31,7 +31,7 @@ const rns = new RNS(web3);
 
 const server = express();
 
-function rnsVhostHandler (req, res) {
+async function rnsVhostHandler (req, res) {
   const hostname = req.vhost[0];
   const hostSegments = hostname.split('.').reverse();
   if (hostSegments.length < 1) {
@@ -47,9 +47,43 @@ function rnsVhostHandler (req, res) {
       error: 'empty segments in domain',
     });
   }
+
+  let addr;
+  let contenthash;
+  const rskDomain = `${hostname}.rsk`;
+  try {
+    addr = await rns.addr(rskDomain) || '';
+  } catch (ex) {
+    console.error(ex);
+  }
+  try {
+    contenthash = await rns.contenthash(rskDomain) || '';
+  } catch (ex) {
+    console.error(ex);
+  }
+
+  let redirectUrl;
+  if (contenthash) {
+    switch (contenthash.protocolType) {
+      case 'ipfs':
+        redirectUrl = `https://ipfs.io/ipfs/${contenthash.decoded}`;
+        break;
+      default:
+        // do nothing
+    }
+  }
+
+  if (redirectUrl) {
+    res.redirect(redirectUrl);
+    return;
+  }
+
   res.status(200).json({
     hostname,
     hostSegments,
+    rskDomain,
+    addr,
+    contenthash,
   });
 }
 
