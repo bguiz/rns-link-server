@@ -23,6 +23,7 @@
   "dependencies": {
     "@rsksmart/rns": "1.9.0",
     "express": "4.17.1",
+    "lru-cache": "6.0.0",
     "vhost": "3.0.2",
     "web3": "1.2.11"
   },
