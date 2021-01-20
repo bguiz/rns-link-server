@@ -21,8 +21,10 @@
   },
   "homepage": "https://github.com/bguiz/rns-link-server#readme",
   "dependencies": {
+    "@rsksmart/rns": "1.9.0",
     "express": "4.17.1",
-    "vhost": "3.0.2"
+    "vhost": "3.0.2",
+    "web3": "1.2.11"
   },
   "devDependencies": {
     "node-dev": "6.2.0"
