@@ -6,7 +6,7 @@ const cacheTtl = process.env.CACHE_TTL ||
   (24 * 60); // in minutes, default to a day
 
 const lruCacheOptions = {
-  max: 2048,
+  max: cacheMaxItems,
   maxAge: (cacheTtl * 60e3),
 };
 
