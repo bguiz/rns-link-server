@@ -3,6 +3,8 @@ const vhost = require('vhost');
 const Web3 = require('web3');
 const RNS = require('@rsksmart/rns');
 
+const lruCache = require('./lru-cache-memory.js');
+
 const rpcUrl = process.env.RPC_URL ||
   'https://public-node.rsk.co/';
 // Ref: https://developers.rsk.co/rif/rns/architecture/registry/
@@ -51,15 +53,25 @@ async function rnsVhostHandler (req, res) {
   let addr;
   let contenthash;
   const rskDomain = `${hostname}.rsk`;
-  try {
-    addr = await rns.addr(rskDomain) || '';
-  } catch (ex) {
-    console.error(ex);
-  }
-  try {
-    contenthash = await rns.contenthash(rskDomain) || '';
-  } catch (ex) {
-    console.error(ex);
+
+  const cacheResult = lruCache.get(rskDomain);
+  if (typeof cacheResult === 'string') {
+    contenthash = JSON.parse(cacheResult);
+  } else {
+    try {
+      addr = await rns.addr(rskDomain) || '';
+    } catch (ex) {
+      console.error(ex);
+    }
+    try {
+      contenthash = await rns.contenthash(rskDomain) || '';
+    } catch (ex) {
+      console.error(ex);
+    }
+
+    if (contenthash) {
+      lruCache.set(rskDomain, JSON.stringify(contenthash));
+    }
   }
 
   let redirectUrl;
@@ -68,13 +80,15 @@ async function rnsVhostHandler (req, res) {
       case 'ipfs':
         redirectUrl = `https://ipfs.io/ipfs/${contenthash.decoded}`;
         break;
+        // TODO add support for more protocol types
+        // TODO add support for more gateways
       default:
         // do nothing
     }
   }
 
   if (redirectUrl) {
-    res.redirect(redirectUrl);
+    res.redirect(302, redirectUrl);
     return;
   }
 
@@ -88,6 +102,7 @@ async function rnsVhostHandler (req, res) {
 }
 
 // TODO guard against regex-based DoS attack vectors
+// NOTE may opt to add such a guard in load balancer layer
 server.use(vhost(/([a-z0-9\.]+)\.localhost/ig, rnsVhostHandler));
 server.use(vhost(/([a-z0-9\.]+)\.rsk\.link/ig, rnsVhostHandler));
 
