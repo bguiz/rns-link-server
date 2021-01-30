@@ -5,6 +5,9 @@ const RNS = require('@rsksmart/rns');
 
 const lruCache = require('./lru-cache-memory.js');
 
+const deploymentType =
+  (process.env.DEPLOYMENT_TYPE || '').toLowerCase();
+
 const rpcUrl = process.env.RPC_URL ||
   'https://public-node.rsk.co/';
 // Ref: https://developers.rsk.co/rif/rns/architecture/registry/
@@ -103,7 +106,12 @@ async function rnsVhostHandler (req, res) {
 
 // TODO guard against regex-based DoS attack vectors
 // NOTE may opt to add such a guard in load balancer layer
-server.use(vhost(/([a-z0-9\.]+)\.localhost/ig, rnsVhostHandler));
-server.use(vhost(/([a-z0-9\.]+)\.rsk\.link/ig, rnsVhostHandler));
+if (deploymentType === 'production' ||
+    deploymentType === 'staging') {
+  server.use(vhost(/([a-z0-9\.]{2,256})\.rsk\.link/i, rnsVhostHandler));
+} else {
+  // localhost
+  server.use(vhost(/([a-z0-9\.]{2,256})\.localhost/i, rnsVhostHandler));
+}
 
 module.exports = server;
