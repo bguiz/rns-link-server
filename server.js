@@ -104,14 +104,28 @@ async function rnsVhostHandler (req, res) {
   });
 }
 
-// TODO guard against regex-based DoS attack vectors
+// Guard against regex-based DoS attack vectors by limiting max length
 // NOTE may opt to add such a guard in load balancer layer
+
+// NOTE DNS allows more characters in domains than RNS does
+// Ref: https://en.wikipedia.org/wiki/Percent-encoding#Types_of_URI_characters
+// Ref: rns.js implementation of `isValidDomain`
+
+// NOTE RNS allows theoretically unlimited lengths for each "label"
+// within a domain, and theoretically unlimited subdomain depth.
+// Therefore the full domain, is of unlimited length.
+// DNS, however, does specify a maximum length of 253 characters in total,
+// and a maximum of 63 characters per subdomain.
+// Thus the maxmium length allowed by this server is
+// `(253 - '.rsk.link'.length)`, which is `244`
+// Ref: https://devblogs.microsoft.com/oldnewthing/20120412-00/?p=7873
+// Ref: https://webmasters.stackexchange.com/a/16997/116884
 if (deploymentType === 'production' ||
     deploymentType === 'staging') {
-  server.use(vhost(/([a-z0-9\.]{2,256})\.rsk\.link/i, rnsVhostHandler));
+  server.use(vhost(/([a-z0-9\.]{2,244})\.rsk\.link/i, rnsVhostHandler));
 } else {
   // localhost
-  server.use(vhost(/([a-z0-9\.]{2,256})\.localhost/i, rnsVhostHandler));
+  server.use(vhost(/([a-z0-9\.]{2,244})\.localhost/i, rnsVhostHandler));
 }
 
 module.exports = server;
