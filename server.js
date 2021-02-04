@@ -44,18 +44,17 @@ async function rnsVhostHandler (req, res) {
       error: 'no domain',
     });
   }
-  const numEmptyHostSegments = hostSegments.filter(
-    (segment) => (typeof segment !== 'string' || segment.length < 1),
-  ).length;
-  if (numEmptyHostSegments > 0) {
+
+  const rskDomain = `${hostname}.rsk`;
+
+  if (!rns.utils.isValidDomain(rskDomain)) {
     res.status(400).json({
-      error: 'empty segments in domain',
+      error: 'invalid rns domain',
     });
   }
 
   let addr;
   let contenthash;
-  const rskDomain = `${hostname}.rsk`;
 
   const cacheResult = lruCache.get(rskDomain);
   if (typeof cacheResult === 'string') {
