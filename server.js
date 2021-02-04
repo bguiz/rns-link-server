@@ -56,23 +56,47 @@ async function rnsVhostHandler (req, res) {
   let addr;
   let contenthash;
 
+  let addrErr;
+  let contenthashErr;
   const cacheResult = lruCache.get(rskDomain);
   if (typeof cacheResult === 'string') {
     contenthash = JSON.parse(cacheResult);
   } else {
     try {
-      addr = await rns.addr(rskDomain) || '';
-    } catch (ex) {
-      console.error(ex);
-    }
-    try {
       contenthash = await rns.contenthash(rskDomain) || '';
     } catch (ex) {
-      console.error(ex);
+      contenthashErr = ex;
     }
 
     if (contenthash) {
       lruCache.set(rskDomain, JSON.stringify(contenthash));
+    }
+    if (!contenthash) {
+      // attempt to look up addr only when there is no contenthash,
+      // so that that minimal info can be displayed.
+      try {
+        addr = await rns.addr(rskDomain) || '';
+      } catch (ex) {
+        addrErr = ex;
+      }
+    }
+
+    if (!addr && !contenthash) {
+      if (addrErr && addrErr.id === 'KB003') { // No resolver
+        res.status(404).json({
+          error: 'No resolver',
+          rskDomain,
+        });
+        return;
+      }
+
+      // only log error when there is neither address not contenthash
+      if (addrErr) {
+        console.error(addrErr);
+      }
+      if (contenthashErr) {
+        console.log(contenthashErr);
+      }
     }
   }
 
